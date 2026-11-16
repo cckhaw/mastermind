@@ -1,0 +1,58 @@
+name: Deploy to Vercel (Production only)
+
+# Production deployments only: no pull_request trigger, so no preview builds.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Deploy to production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $url"
+      - name: Wait until the deployment is READY
+        run: |
+          for i in $(seq 1 40); do
+            state=$(curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v13/deployments/${{ steps.deploy.outputs.url }}?teamId=$VERCEL_TEAM_ID" | jq -r .readyState)
+            echo "state=$state"
+            [ "$state" = "READY" ] && exit 0
+            [ "$state" = "ERROR" ] || [ "$state" = "CANCELED" ] && exit 1
+            sleep 5
+          done
+          exit 1
+      - name: Delete all previous deployments (keep only the latest)
+        run: |
+          latest=$(curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments/${{ steps.deploy.outputs.url }}?teamId=$VERCEL_TEAM_ID" | jq -r .id)
+          echo "Keeping $latest"
+          curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_TEAM_ID&limit=100" \
+            | jq -r --arg keep "$latest" '.deployments[] | select(.uid != $keep) | .uid' \
+            | while read -r id; do
+                echo "Deleting $id"
+                curl -fsS -X DELETE -H "Authorization: Bearer $VERCEL_TOKEN" \
+                  "https://api.vercel.com/v13/deployments/$id?teamId=$VERCEL_TEAM_ID" >/dev/null || echo "  (failed)"
+              done

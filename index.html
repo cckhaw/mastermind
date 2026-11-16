@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mastermind">
+  <meta name="theme-color" content="#2a1b14">
+  <meta name="description" content="Mastermind — the classic code-breaking board game. Pass & play offline or challenge a friend online.">
+  <title>Mastermind</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-theme="vintage">
+<div id="app">
+
+  <header class="topbar">
+    <button id="btn-home" class="icon-btn" aria-label="Home" hidden>&#8962;</button>
+    <div class="brand">MASTERMIND</div>
+    <div class="top-actions">
+      <span id="net-dot" class="net-dot" hidden></span>
+      <button id="btn-theme" class="icon-btn" aria-label="Switch board theme" title="Switch board theme">&#127912;</button>
+      <button id="btn-sound" class="icon-btn" aria-label="Mute or unmute sound">&#128266;</button>
+      <button id="btn-menu" class="icon-btn" aria-label="Menu">&#8943;</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="scroll">
+        <div class="hero">
+          <div class="hero-pegs" aria-hidden="true"><i class="peg c0"></i><i class="peg c1"></i><i class="peg c2"></i><i class="peg c3"></i></div>
+          <h1>Mastermind</h1>
+          <p>Crack the secret colour code.</p>
+        </div>
+        <div class="cards">
+          <button id="btn-resume" class="card primary" hidden><b>Resume match</b><small id="resume-info"></small></button>
+          <button id="btn-local" class="card"><b>Pass &amp; Play</b><small>Offline &middot; one device &middot; works in airplane mode</small></button>
+          <button id="btn-online" class="card"><b>Online Challenge</b><small>Two devices &middot; share a challenge code</small><span id="online-badge" class="badge" hidden>Requires Internet</span></button>
+        </div>
+        <div class="home-links">
+          <button id="lnk-stats" class="link">Stats</button>
+          <button id="lnk-help" class="link">How to play</button>
+          <button id="lnk-install" class="link">Install offline app</button>
+        </div>
+        <div id="install-banner" class="install-banner" hidden>
+          <div><b>Install Offline App</b><span>Add Mastermind to your home screen to play full-screen, even without internet.</span></div>
+          <div class="ib-actions"><button id="ib-guide" class="btn small">How</button><button id="ib-close" class="icon-btn" aria-label="Dismiss">&times;</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOCAL SETUP -->
+    <section id="screen-local" class="screen">
+      <div class="scroll"><div class="panel">
+        <h2>Pass &amp; Play</h2>
+        <label class="field">Player 1<input id="local-p1" maxlength="14" autocomplete="off" placeholder="Player 1"></label>
+        <label class="field">Player 2<input id="local-p2" maxlength="14" autocomplete="off" placeholder="Player 2"></label>
+        <div id="local-opts"></div>
+        <button id="local-start" class="btn primary wide">Start match</button>
+        <button class="btn ghost wide" data-back>Back</button>
+      </div></div>
+    </section>
+
+    <!-- ONLINE MENU -->
+    <section id="screen-online" class="screen">
+      <div class="scroll"><div class="panel">
+        <h2>Online Challenge</h2>
+        <p class="muted">Peer-to-peer over WebRTC. The secret code never leaves the codemaker's device until the round ends.</p>
+        <button id="online-create" class="btn primary wide">Create Challenge</button>
+        <button id="online-join" class="btn wide">Join Challenge</button>
+        <button class="btn ghost wide" data-back>Back</button>
+      </div></div>
+    </section>
+
+    <!-- HOST -->
+    <section id="screen-host" class="screen">
+      <div class="scroll"><div class="panel">
+        <h2>Create Challenge</h2>
+        <div id="host-setup">
+          <label class="field">Your name<input id="host-name" maxlength="14" autocomplete="off" placeholder="Your name"></label>
+          <div id="host-opts"></div>
+          <button id="host-go" class="btn primary wide">Create Challenge</button>
+        </div>
+        <div id="host-lobby" hidden>
+          <p class="muted center">Share this code with your opponent</p>
+          <button id="code-big" class="code-big" aria-label="Tap to copy challenge code"><span id="code-text">------</span><small id="code-hint">Tap to copy</small></button>
+          <button id="host-share" class="btn wide">Share Challenge</button>
+          <div class="lobby-status"><span id="host-dot" class="net-dot wait"></span><span id="host-status">Waiting for challenger...</span></div>
+        </div>
+        <button class="btn ghost wide" id="host-back">Back</button>
+      </div></div>
+    </section>
+
+    <!-- JOIN -->
+    <section id="screen-join" class="screen">
+      <div class="scroll"><div class="panel">
+        <h2>Join Challenge</h2>
+        <label class="field">Your name<input id="join-name" maxlength="14" autocomplete="off" placeholder="Your name"></label>
+        <label class="field">Challenge code<input id="join-code" class="code-input" maxlength="7" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="ABC-123"></label>
+        <button id="join-go" class="btn primary wide">Join</button>
+        <div class="lobby-status"><span id="join-dot" class="net-dot wait" hidden></span><span id="join-status"></span></div>
+        <button class="btn ghost wide" id="join-back">Back</button>
+      </div></div>
+    </section>
+
+    <!-- GAME -->
+    <section id="screen-game" class="screen">
+      <div class="scorebar">
+        <div class="pl" id="pl0"><i class="chip sp0"></i><span class="nm"></span><b class="sc">0</b></div>
+        <div class="mid"><span id="round-label"></span><em id="role-label"></em></div>
+        <div class="pl right" id="pl1"><b class="sc">0</b><span class="nm"></span><i class="chip sp1"></i></div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="board-wrap" id="board-wrap"><div class="board" id="board"></div></div>
+        <div class="floaters" id="floaters"></div>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="dock" id="dock">
+        <div class="reactbar" id="reactbar" hidden>
+          <button data-emoji="&#129300;">&#129300;</button><button data-emoji="&#128293;">&#128293;</button><button data-emoji="&#128517;">&#128517;</button><button data-emoji="&#127919;">&#127919;</button>
+        </div>
+        <div class="pegtray" id="pegtray"></div>
+        <div class="actions">
+          <button id="btn-undo" class="btn ghost" aria-label="Remove last peg">&#9003;</button>
+          <button id="btn-react" class="btn ghost" aria-label="Quick chat" hidden>&#128172;</button>
+          <button id="btn-action" class="btn primary">Check Row</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div id="modal" class="modal" hidden><div class="sheet" id="sheet"></div></div>
+</div>
+
+<script src="vendor/peerjs.min.js"></script>
+<script src="webrtc.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
